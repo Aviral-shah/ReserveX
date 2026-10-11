@@ -6,6 +6,7 @@ import createHttpError from "http-errors";
 import { isValidEmail } from "../../utils";
 import { ITokenPayload } from "./auth.interface";
 import { JwtPayload } from "jsonwebtoken";
+import { config } from "../../config/config";
 
 
 export const sendOtp = async (req: Request, res: Response, next: NextFunction) => {
@@ -32,13 +33,19 @@ export const sendOtp = async (req: Request, res: Response, next: NextFunction) =
         const data = `${email}.${otp}.${expires}`;
         const hashedOTP = OtpService.hashOTP(data);
 
-        // 3. Send OTP to user's email;
+        // 3. Send OTP to user's email or print to console in dev mode
         try {
-            await OtpService.sendOTPtoEmail(email, otp);
+            if (config.emailUsername && config.emailPassword) {
+                await OtpService.sendOTPtoEmail(email, otp);
+            } else {
+                console.log(`\n========================================`);
+                console.log(`🔑 [DEV OTP] Your OTP for ${email} is: ${otp}`);
+                console.log(`========================================\n`);
+            }
         } catch (error) {
-            console.log(error);
-            const err = new createHttpError.InternalServerError("Error sending OTP to email");
-            return next(err);
+            console.log(`\n========================================`);
+            console.log(`🔑 [DEV FALLBACK OTP] Your OTP for ${email} is: ${otp}`);
+            console.log(`========================================\n`);
         }
 
         // 4. Respond to the client;

@@ -85,7 +85,7 @@ const Checkout = () => {
         key: `${import.meta.env.VITE_RAZORPAY_API_KEY}`,
         amount: orderData?.amount,
         currency: orderData?.currency,
-        name: "BookMyScreen",
+        name: "RESERVEX",
         description: "Secure Payment for Your Booking",
         order_id: orderData?.id,
         handler: async function (response) {

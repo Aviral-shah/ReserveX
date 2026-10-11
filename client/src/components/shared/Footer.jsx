@@ -14,7 +14,7 @@ const Footer = () => {
       <div className="border-t border-gray-600 w-full" />
       <div className="flex flex-col items-center py-6">
         {/* Logo */}
-        <img src={mainLogo} alt="BookMyScreen Logo" className="w-28 mb-4" />
+        <img src={mainLogo} alt="RESERVEX Logo" className="w-44 md:w-52 mb-4" />
 
         {/* Social Icons */}
         <div className="flex space-x-4 mb-4 mx-auto">
@@ -28,7 +28,7 @@ const Footer = () => {
 
         {/* Copyright */}
         <p className="text-center text-xs px-4 max-w-4xl">
-          Copyright 2025 © bookMyScreen Pvt Ltd. Ltd. All Rights Reserved.
+          Copyright 2026 © RESERVEX Pvt Ltd. All Rights Reserved.
           <br />
         </p>
         <small>

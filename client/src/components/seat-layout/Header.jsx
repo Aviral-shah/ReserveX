@@ -21,8 +21,8 @@ const Header = ({ showData, type }) => {
           <img
             onClick={() => navigate("/")}
             src={mainLogo}
-            alt="bookMyScreen"
-            className="h-6 md:h-8 object-contain cursor-pointer"
+            alt="RESERVEX"
+            className="h-9 md:h-11 object-contain cursor-pointer"
           />
 
           {type === "checkout" ? (

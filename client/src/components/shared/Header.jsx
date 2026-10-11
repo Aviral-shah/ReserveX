@@ -25,7 +25,7 @@ const Header = () => {
               onClick={() => navigate("/")}
               src={mainLogo}
               alt="logo"
-              className="h-8 object-contain cursor-pointer"
+              className="h-11 md:h-12 object-contain cursor-pointer"
             />
             <div className="relative">
               <input

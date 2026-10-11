@@ -34,7 +34,7 @@ const SignInModel = () => {
           <IoClose onClick={() => toggleModal()} className="absolute top-4 right-4 text-4xl cursor-pointer" />
           <img
             src={mainWhiteLogo}
-            alt="bookMyScreen"
+            alt="RESERVEX"
             className="mx-auto h-24 mb-2"
           />
           <p className="text-md text-white -mt-2">Where movies meet magic.</p>
