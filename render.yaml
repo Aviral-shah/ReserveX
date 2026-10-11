@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: reservex-backend
+    env: node
+    rootDir: server
+    buildCommand: npm install && npm run build
+    startCommand: node dist/server.js
+    envVars:
+      - key: PORT
+        value: 9000
