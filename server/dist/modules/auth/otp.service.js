@@ -33,30 +33,32 @@ const verifyOTP = (hashedOTP, data) => {
 exports.verifyOTP = verifyOTP;
 // send otp to user via email;
 const _config = {
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
         user: config_1.config.emailUsername,
-        pass: config_1.config.emailPassword,
+        pass: config_1.config.emailPassword ? config_1.config.emailPassword.replace(/\s+/g, "") : "",
     },
 };
 const transporter = nodemailer_1.default.createTransport(_config);
 const mailGenerator = new mailgen_1.default({
     theme: "default",
     product: {
-        name: "bookMyScreen",
-        link: "https://amritraj.vercel.app",
-        logo: "https://res.cloudinary.com/amritrajmaurya/image/upload/v1751475322/zu4fnmh2jljzbtey77ah.png",
+        name: "RESERVEX",
+        link: "https://reservex-client.onrender.com",
+        logo: "https://raw.githubusercontent.com/Aviral-shah/ReserveX/main/client/src/assets/main-icon.png",
     },
 });
 const sendOTPtoEmail = async (email, otp) => {
     const emailTemp = {
         body: {
             name: '',
-            intro: 'Welcome to bookMyScreen! We\'re very excited to have you on board.',
+            intro: "Welcome to RESERVEX! We're very excited to have you on board.",
             action: {
                 instructions: 'To verify your account, please use the following OTP:',
                 button: {
-                    color: '#323232', // Optional action button color
+                    color: '#E50914',
                     text: otp,
                     link: '#'
                 }
@@ -68,7 +70,7 @@ const sendOTPtoEmail = async (email, otp) => {
     let message = {
         from: config_1.config.emailUsername,
         to: email,
-        subject: "Your OTP for bookMyScreen",
+        subject: "Your OTP for RESERVEX",
         html: mail
     };
     const info = await transporter.sendMail(message);
