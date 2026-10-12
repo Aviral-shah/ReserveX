@@ -11,9 +11,23 @@ const routes_1 = __importDefault(require("./routes"));
 const error_middleware_1 = require("./middlewares/error.middleware");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
+const allowedOrigins = [
+    "http://localhost:5173",
+    process.env.FRONTEND_URL,
+].filter(Boolean);
 app.use((0, cors_1.default)({
     credentials: true,
-    origin: ["http://localhost:5173"],
+    origin: (origin, callback) => {
+        if (!origin)
+            return callback(null, true);
+        if (allowedOrigins.includes(origin) ||
+            origin.includes("localhost") ||
+            origin.endsWith(".onrender.com") ||
+            origin.endsWith(".vercel.app")) {
+            return callback(null, true);
+        }
+        return callback(null, true);
+    },
 }));
 app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.json());

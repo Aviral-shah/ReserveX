@@ -15,10 +15,26 @@ const startServer = async () => {
   // Create HTTP server from Express app
   const httpServer = http.createServer(app);
 
+  const allowedOrigins = [
+    "http://localhost:5173",
+    process.env.FRONTEND_URL,
+  ].filter(Boolean) as string[];
+
   // Create socket.io server
   const io = new Server(httpServer, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (
+          allowedOrigins.includes(origin) ||
+          origin.includes("localhost") ||
+          origin.endsWith(".onrender.com") ||
+          origin.endsWith(".vercel.app")
+        ) {
+          return callback(null, true);
+        }
+        return callback(null, true);
+      },
       methods: ["GET", "POST"],
       credentials: true,
     },
