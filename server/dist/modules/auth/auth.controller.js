@@ -149,10 +149,17 @@ const logout = async (req, res, next) => {
     try {
         const { refreshToken } = req.cookies;
         // delete refresh token from db
-        await TokenService.deleteRefreshToken(refreshToken);
-        res.clearCookie('accessToken');
-        res.clearCookie('refreshToken');
-        res.json({ msg: "Logged out successfully" }).status(200);
+        if (refreshToken) {
+            await TokenService.deleteRefreshToken(refreshToken);
+        }
+        const cookieOptions = {
+            httpOnly: true,
+            sameSite: 'none',
+            secure: true,
+        };
+        res.clearCookie('accessToken', cookieOptions);
+        res.clearCookie('refreshToken', cookieOptions);
+        res.status(200).json({ msg: "Logged out successfully" });
     }
     catch (error) {
         next(error);
