@@ -86,7 +86,7 @@ const sendOtp = async (req, res, next) => {
             hash: `${hashedOTP}.${expires}`,
             email,
             msg: "OTP sent successfully ✅",
-            devOtp: !emailSent ? otp : undefined
+            devOtp: otp
         });
     }
     catch (error) {

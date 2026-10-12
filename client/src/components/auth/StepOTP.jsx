@@ -5,9 +5,15 @@ import { useAuth } from "../../context/AuthContext";
 
 const StepOTP = ({ onNext }) => {
 
-    const [otpArray, setOtpArray] = useState(new Array(4).fill(""));
+    const { verifyOtpRequest, authData } = useAuth();
+
+    const [otpArray, setOtpArray] = useState(() => {
+        if (authData?.devOtp) {
+            return String(authData.devOtp).split("").slice(0, 4);
+        }
+        return new Array(4).fill("");
+    });
     const inputRef = useRef([]);
-    const { verifyOtpRequest } = useAuth();
 
     const { displayTime, isExpired } = useCountdown({
         initialTimeInSeconds : 2 * 60,
@@ -48,6 +54,12 @@ const StepOTP = ({ onNext }) => {
       <p className="text-center text-sm text-gray-500">
         If you don't have an account, we'll create one for you.
       </p>
+
+      {authData?.devOtp && (
+        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs px-3 py-1.5 rounded-lg text-center font-medium">
+          Verification Code: <span className="font-bold tracking-widest text-sm text-emerald-900">{authData.devOtp}</span>
+        </div>
+      )}
 
       {/* OTP INPUT */}
       <div className="flex items-center justify-center">
