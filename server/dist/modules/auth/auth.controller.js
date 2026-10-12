@@ -61,15 +61,18 @@ const sendOtp = async (req, res, next) => {
         const expires = Date.now() + ttl;
         const data = `${email}.${otp}.${expires}`;
         const hashedOTP = OtpService.hashOTP(data);
-        // 3. Send OTP via Resend (HTTPS) first, fallback to Nodemailer, fallback to dev response
+        // 3. Send OTP via Resend (HTTPS) first, with strict 2.5s timeout safeguard so user never waits
         let emailSent = false;
         try {
             if (config_1.config.resendApiKey) {
-                emailSent = await OtpService.sendViaResend(email, otp);
+                const sendPromise = OtpService.sendViaResend(email, otp);
+                const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(false), 2500));
+                emailSent = await Promise.race([sendPromise, timeoutPromise]);
             }
             if (!emailSent && config_1.config.emailUsername && config_1.config.emailPassword) {
-                await OtpService.sendOTPtoEmail(email, otp);
-                emailSent = true;
+                const nodemailerPromise = OtpService.sendOTPtoEmail(email, otp).then(() => true).catch(() => false);
+                const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(false), 2500));
+                emailSent = await Promise.race([nodemailerPromise, timeoutPromise]);
             }
         }
         catch (error) {
