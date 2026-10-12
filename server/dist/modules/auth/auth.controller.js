@@ -61,26 +61,29 @@ const sendOtp = async (req, res, next) => {
         const expires = Date.now() + ttl;
         const data = `${email}.${otp}.${expires}`;
         const hashedOTP = OtpService.hashOTP(data);
-        // 3. Send OTP to user's email or print to console in dev mode
+        // 3. Send OTP via Resend (HTTPS) first, fallback to Nodemailer, fallback to dev response
+        let emailSent = false;
         try {
-            if (config_1.config.emailUsername && config_1.config.emailPassword) {
-                await OtpService.sendOTPtoEmail(email, otp);
+            if (config_1.config.resendApiKey) {
+                emailSent = await OtpService.sendViaResend(email, otp);
             }
-            else {
-                console.log(`\n========================================`);
-                console.log(`🔑 [DEV OTP] Your OTP for ${email} is: ${otp}`);
-                console.log(`========================================\n`);
+            if (!emailSent && config_1.config.emailUsername && config_1.config.emailPassword) {
+                await OtpService.sendOTPtoEmail(email, otp);
+                emailSent = true;
             }
         }
         catch (error) {
-            console.log(`\n========================================`);
-            console.log(`🔑 [DEV FALLBACK OTP] Your OTP for ${email} is: ${otp}`);
-            console.log(`========================================\n`);
+            console.error("Email sending error:", error.message || error);
         }
+        console.log(`\n========================================`);
+        console.log(`🔑 [OTP] Code for ${email} is: ${otp}`);
+        console.log(`========================================\n`);
         // 4. Respond to the client;
         res.json({
             hash: `${hashedOTP}.${expires}`,
-            email, msg: "OTP sent to email successfully ✅"
+            email,
+            msg: "OTP sent successfully ✅",
+            devOtp: !emailSent ? otp : undefined
         });
     }
     catch (error) {

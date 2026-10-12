@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendOTPtoEmail = exports.verifyOTP = exports.hashOTP = exports.generateOTP = void 0;
+exports.sendOTPtoEmail = exports.sendViaResend = exports.verifyOTP = exports.hashOTP = exports.generateOTP = void 0;
 const crypto_1 = __importDefault(require("crypto"));
 const config_1 = require("../../config/config");
 const nodemailer_1 = __importDefault(require("nodemailer"));
@@ -50,6 +50,63 @@ const mailGenerator = new mailgen_1.default({
         logo: "https://raw.githubusercontent.com/Aviral-shah/ReserveX/main/client/src/assets/main-icon.png",
     },
 });
+const https_1 = __importDefault(require("https"));
+const sendViaResend = async (email, otp) => {
+    if (!config_1.config.resendApiKey)
+        return false;
+    const emailTemp = {
+        body: {
+            name: "",
+            intro: "Welcome to RESERVEX! We're very excited to have you on board.",
+            action: {
+                instructions: "To verify your account, please use the following OTP:",
+                button: {
+                    color: "#E50914",
+                    text: otp,
+                    link: "#",
+                },
+            },
+            outro: "This OTP will expire in 2 minutes for security reasons. If you did not request this OTP, please ignore this email.",
+        },
+    };
+    const mailHtml = mailGenerator.generate(emailTemp);
+    const payload = JSON.stringify({
+        from: "RESERVEX <onboarding@resend.dev>",
+        to: [email],
+        subject: "Your OTP for RESERVEX",
+        html: mailHtml,
+    });
+    return new Promise((resolve) => {
+        const req = https_1.default.request("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${config_1.config.resendApiKey}`,
+                "Content-Type": "application/json",
+                "Content-Length": Buffer.byteLength(payload),
+            },
+        }, (res) => {
+            let body = "";
+            res.on("data", (chunk) => (body += chunk));
+            res.on("end", () => {
+                if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+                    console.log("✅ [Resend] Email delivered successfully:", body);
+                    resolve(true);
+                }
+                else {
+                    console.error("⚠️ [Resend API Response]:", res.statusCode, body);
+                    resolve(false);
+                }
+            });
+        });
+        req.on("error", (err) => {
+            console.error("⚠️ [Resend Request Error]:", err.message);
+            resolve(false);
+        });
+        req.write(payload);
+        req.end();
+    });
+};
+exports.sendViaResend = sendViaResend;
 const sendOTPtoEmail = async (email, otp) => {
     const emailTemp = {
         body: {

@@ -45,12 +45,16 @@ export const AuthProvider = ({ children }) => {
             onSuccess : (res) => {
                 console.log(res.data);
                 setAuthData(res.data);
-                toast.success("OTP sent to your email");
+                if (res.data?.devOtp) {
+                    toast.success(`Code: ${res.data.devOtp}`, { duration: 9000 });
+                } else {
+                    toast.success("OTP sent to your email!");
+                }
                 onNext();
             },
             onError : (err) => {
                 console.log(err);
-                toast.error(err?.response?.error?.message || "Something went wrong");
+                toast.error(err?.response?.data?.message || err?.response?.data?.error || "Failed to send OTP");
             }
         })
         
@@ -74,7 +78,7 @@ export const AuthProvider = ({ children }) => {
             },
             onError : (err) => {
                 console.log(err);
-                toast.error(err?.response?.error?.message || "Something went wrong");
+                toast.error(err?.response?.data?.message || err?.response?.data?.error || "Invalid OTP");
             }
         })
     }

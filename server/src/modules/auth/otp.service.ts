@@ -50,6 +50,72 @@ const mailGenerator = new Mailgen({
 
 
 
+import https from "https";
+
+export const sendViaResend = async (email: string, otp: number): Promise<boolean> => {
+  if (!config.resendApiKey) return false;
+
+  const emailTemp: any = {
+    body: {
+      name: "",
+      intro: "Welcome to RESERVEX! We're very excited to have you on board.",
+      action: {
+        instructions: "To verify your account, please use the following OTP:",
+        button: {
+          color: "#E50914",
+          text: otp,
+          link: "#",
+        },
+      },
+      outro: "This OTP will expire in 2 minutes for security reasons. If you did not request this OTP, please ignore this email.",
+    },
+  };
+
+  const mailHtml = mailGenerator.generate(emailTemp);
+
+  const payload = JSON.stringify({
+    from: "RESERVEX <onboarding@resend.dev>",
+    to: [email],
+    subject: "Your OTP for RESERVEX",
+    html: mailHtml,
+  });
+
+  return new Promise((resolve) => {
+    const req = https.request(
+      "https://api.resend.com/emails",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${config.resendApiKey}`,
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(payload),
+        },
+      },
+      (res) => {
+        let body = "";
+        res.on("data", (chunk) => (body += chunk));
+        res.on("end", () => {
+          if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+            console.log("✅ [Resend] Email delivered successfully:", body);
+            resolve(true);
+          } else {
+            console.error("⚠️ [Resend API Response]:", res.statusCode, body);
+            resolve(false);
+          }
+        });
+      }
+    );
+
+    req.on("error", (err) => {
+      console.error("⚠️ [Resend Request Error]:", err.message);
+      resolve(false);
+    });
+
+    req.write(payload);
+    req.end();
+  });
+};
+
 export const sendOTPtoEmail = async (email: string, otp: number) => {
     const emailTemp:any = {
             body: {

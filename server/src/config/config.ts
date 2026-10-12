@@ -23,6 +23,7 @@ const _config = {
     razorpayKey : process.env.RAZORPAY_API_KEY as string,
     razorpaySecret : process.env.RAZORPAY_SECRET_KEY as string,
     databaseReplicaSet: (process.env.MONGO_REPLICA_STRING || process.env.MONGO_CONNECTION_STRING) as string,
+    resendApiKey: process.env.RESEND_API_KEY as string,
 }
 
 export const config = Object.freeze(_config);

@@ -33,26 +33,31 @@ export const sendOtp = async (req: Request, res: Response, next: NextFunction) =
         const data = `${email}.${otp}.${expires}`;
         const hashedOTP = OtpService.hashOTP(data);
 
-        // 3. Send OTP to user's email or print to console in dev mode
+        // 3. Send OTP via Resend (HTTPS) first, fallback to Nodemailer, fallback to dev response
+        let emailSent = false;
         try {
-            if (config.emailUsername && config.emailPassword) {
-                await OtpService.sendOTPtoEmail(email, otp);
-            } else {
-                console.log(`\n========================================`);
-                console.log(`🔑 [DEV OTP] Your OTP for ${email} is: ${otp}`);
-                console.log(`========================================\n`);
+            if (config.resendApiKey) {
+                emailSent = await OtpService.sendViaResend(email, otp);
             }
-        } catch (error) {
-            console.log(`\n========================================`);
-            console.log(`🔑 [DEV FALLBACK OTP] Your OTP for ${email} is: ${otp}`);
-            console.log(`========================================\n`);
+            if (!emailSent && config.emailUsername && config.emailPassword) {
+                await OtpService.sendOTPtoEmail(email, otp);
+                emailSent = true;
+            }
+        } catch (error: any) {
+            console.error("Email sending error:", error.message || error);
         }
+
+        console.log(`\n========================================`);
+        console.log(`🔑 [OTP] Code for ${email} is: ${otp}`);
+        console.log(`========================================\n`);
 
         // 4. Respond to the client;
         res.json({
             hash: `${hashedOTP}.${expires}`,
-            email, msg: "OTP sent to email successfully ✅"
-        })
+            email,
+            msg: "OTP sent successfully ✅",
+            devOtp: !emailSent ? otp : undefined
+        });
 
     } catch (error) {
         next(error);
