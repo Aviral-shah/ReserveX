@@ -4,6 +4,19 @@ exports.updateSeatStatus = exports.getShowById = exports.getShowsByMovieDateLoca
 const mongoose_1 = require("mongoose");
 const utils_1 = require("../../utils");
 const show_model_1 = require("./show.model");
+const theater_model_1 = require("../theater/theater.model");
+const defaultPriceMap = () => new Map([
+    ["PREMIUM", 510],
+    ["EXECUTIVE", 290],
+    ["NORMAL", 180],
+]);
+const fixedTimeSlots = [
+    { startTime: "09:30 AM", format: "2D", audioType: "Dolby 7.1" },
+    { startTime: "01:00 PM", format: "3D", audioType: "Dolby Atmos" },
+    { startTime: "04:30 PM", format: "IMAX", audioType: "Dolby Atmos" },
+    { startTime: "07:45 PM", format: "2D", audioType: "Dolby 7.1" },
+    { startTime: "10:30 PM", format: "PVR PXL", audioType: "Dolby Atmos" },
+];
 //1. Create a show
 const createShow = async (showData) => {
     const seatLayout = (0, utils_1.generateSeatLayout)();
@@ -13,16 +26,62 @@ const createShow = async (showData) => {
 exports.createShow = createShow;
 //2. get shows by movie date and location
 const getShowsByMovieDateLocation = async (movieId, date, location) => {
+    if (!mongoose_1.Types.ObjectId.isValid(movieId)) {
+        return [];
+    }
+    const safeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const query = {
         movie: new mongoose_1.Types.ObjectId(movieId),
-        location: { $regex: new RegExp(location, "i") },
     };
+    if (location) {
+        query.location = { $regex: new RegExp(safeRegex(location), "i") };
+    }
     if (date) {
         query.date = date;
     }
-    const shows = await show_model_1.ShowModel.find(query)
+    let shows = await show_model_1.ShowModel.find(query)
         .populate("movie theater")
         .sort({ startTime: 1 });
+    // Option B: If no shows exist for this date & movie, auto-populate dynamically
+    if ((!shows || shows.length === 0) && date && movieId) {
+        try {
+            let theaters = await theater_model_1.TheaterModel.find(location ? { state: { $regex: new RegExp(safeRegex(location), "i") } } : {});
+            // Fallback: if no theaters match that state, pick up to 3 existing theaters
+            if (!theaters || theaters.length === 0) {
+                theaters = await theater_model_1.TheaterModel.find().limit(3);
+            }
+            if (theaters.length > 0) {
+                const showsToCreate = [];
+                for (let idx = 0; idx < theaters.length; idx++) {
+                    const theater = theaters[idx];
+                    const count = 3 + (idx % 2); // 3 to 4 slots per theater
+                    const selectedSlots = fixedTimeSlots.slice(0, count);
+                    for (const slot of selectedSlots) {
+                        showsToCreate.push({
+                            movie: new mongoose_1.Types.ObjectId(movieId),
+                            theater: theater._id,
+                            location: location || theater.state,
+                            format: slot.format,
+                            audioType: slot.audioType,
+                            startTime: slot.startTime,
+                            date: date,
+                            priceMap: defaultPriceMap(),
+                            seatLayout: (0, utils_1.generateSeatLayout)(),
+                        });
+                    }
+                }
+                if (showsToCreate.length > 0) {
+                    await show_model_1.ShowModel.insertMany(showsToCreate);
+                    shows = await show_model_1.ShowModel.find(query)
+                        .populate("movie theater")
+                        .sort({ startTime: 1 });
+                }
+            }
+        }
+        catch (err) {
+            console.error("Auto-populating demo shows failed gracefully:", err);
+        }
+    }
     const groupedShows = (0, utils_1.groupShowsByTheatreAndMovie)(shows);
     return groupedShows;
 };
