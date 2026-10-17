@@ -32,12 +32,12 @@ const Recommended = () => {
 
   return (
     <div className="w-full py-6 bg-white">
-      <div className="max-w-screen-xl mx-auto px-4">
-        <div className="items-center flex justify-between mb-4">
-          <h2 className="text-2xl font-semibold">Recommende Movies</h2>
+      <div className="max-w-screen-xl mx-auto px-3 sm:px-4">
+        <div className="items-center flex justify-between mb-3 md:mb-4">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-semibold">Recommended Movies</h2>
           <span 
           onClick={() => navigate("/movies")}
-            className="text-md text-red-500 cursor-pointer hover:underline
+            className="text-sm sm:text-md text-red-500 cursor-pointer hover:underline
                 font-medium"
           >
             See All
@@ -45,16 +45,16 @@ const Recommended = () => {
         </div>
 
         <div
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4
-             xl:grid-cols-5 gap-4"
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4
+             xl:grid-cols-5 gap-3 md:gap-4"
         >
           {recMovies?.data.topMovies.map((movie, i) => (
-            <div key={i} onClick={() => handleNavigate(movie)} className="rounded overflow-hidden cursor-pointer">
+            <div key={i} onClick={() => handleNavigate(movie)} className="rounded overflow-hidden cursor-pointer hover:shadow-md transition">
               <div className="relative">
                 <img
                   src={movie.posterUrl}
                   alt={movie.title}
-                  className="w-full h-[300px] object-cover rounded"
+                  className="w-full h-[220px] sm:h-[260px] md:h-[300px] object-cover rounded"
                 />
               </div>
               <div
